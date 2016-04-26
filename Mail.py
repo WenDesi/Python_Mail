@@ -1,23 +1,50 @@
 #encoding=utf-8
 
 import imaplib
+import smtplib
 import email
+
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.image import MIMEImage
+
+from Message import *
 
 class Mail(object):
 
     def __init__(self, mailhost, account, password, port = 993, ssl = 1):
-        self.mailhost = mailhost
+        self.receive_mail_host = 'imap.' + mailhost
+        self.send_mail_host = 'smtp.' + mailhost
         self.account = account
         self.password = password
         self.port = port
         self.ssl = ssl
 
-    def getMail(self):
+        self.send_email_from = 'J.A.R.V.I.S.<18188609675@126.com>'
+
+        self.last_email_date = ''
+
+    def send_mail(self,send_info, type = 'text'):
+        msg = MIMEText(send_info.detail_msg,'html','utf-8')
+
+        msg['Subject'] = send_info.subject
+        msg['From'] = self.send_email_from
+        msg['To'] = send_info.ip
+
+        smtp = smtplib.SMTP()
+        smtp.connect(self.send_mail_host)
+        smtp.login(self.account, self.password)
+        smtp.sendmail(self.account, [send_info.ip], msg.as_string())
+        smtp.quit()
+
+
+    def get_mail(self):
         #是否采用ssl
         if self.ssl == 1:
-            imapServer = imaplib.IMAP4_SSL(self.mailhost, self.port)
+            imapServer = imaplib.IMAP4_SSL(self.receive_mail_host, self.port)
         else:
-            imapServer = imaplib.IMAP4(self.mailhost, self.port)
+            print self.receive_mail_host
+            imapServer = imaplib.IMAP4(self.receive_mail_host, self.port)
         imapServer.login(self.account, self.password)
 
         resp, items = imapServer.select('INBOX')
@@ -39,12 +66,10 @@ class Mail(object):
         sub = self.my_unicode(subject[0][0], subject[0][1])
         strsub = 'Subject : ' + sub
 
-        mailContent, suffix = self.parseEmail(msg)
+        # mailContent, suffix = self.parseEmail(msg)
 
-        print '\n'
-        print strfrom
-        print strdate
-        print strsub
+        mail_info = Message(ls[1],sub,msg['Date'],'')
+        return mail_info
 
 
     #字符编码转换方法
@@ -54,47 +79,16 @@ class Mail(object):
         else:
             return unicode(s)
 
-    #获得字符编码方法
-    def get_charset(self, message, default="ascii"):
-        #Get the message charset
-        return message.get_charset()
-        return default
+    #解析IP地址
+    def anlysis_ip(self, ip):
+        pass
 
-    #解析邮件方法（区分出正文与附件）
-    def parseEmail(self, msg):
-        mailContent = None
-        contenttype = None
-        suffix =None
-        for part in msg.walk():
-            if not part.is_multipart():
-                contenttype = part.get_content_type()
-                filename = part.get_filename()
-                charset = self.get_charset(part)
-                #是否有附件
-                if filename:
-                    h = email.Header.Header(filename)
-                    dh = email.Header.decode_header(h)
-                    fname = dh[0][0]
-                    encodeStr = dh[0][1]
-                    if encodeStr != None:
-                        if charset == None:
-                            fname = fname.decode(encodeStr, 'gbk')
-                        else:
-                            fname = fname.decode(encodeStr, charset)
-                    data = part.get_payload(decode=True)
-                    print('Attachment : ' + fname)
 
-                else:
-                    if contenttype in ['text/plain']:
-                        suffix = '.txt'
-                    if contenttype in ['text/html']:
-                        suffix = '.htm'
-                    if charset == None:
-                        mailContent = part.get_payload(decode=True)
-                    else:
-                        mailContent = part.get_payload(decode=True).decode(charset)
-        return  (mailContent, suffix)
+
 
 if __name__ == '__main__':
-    wds = Mail('imap.126.com', '18188609675@126.com', 'wds2006sdo', 143, 0)
-    wds.getMail()
+    wds = Mail('126.com', '18188609675@126.com', 'wds2006sdo', 143, 0)
+    print wds.get_mail()
+
+    string = '<b>Some <i>HTML</i> text</b> and an image.<br><img src="cid:image1"><br>good!'
+    # wds.send_mail(u'本机IP报告 —— created by wds',u'Hello 温德斯\n   这里是你的智能机器人，专门帮你发送您的IP地址的\n您的IP地址为128.33.22.1')
