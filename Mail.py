@@ -28,12 +28,12 @@ class Mail(object):
 
         msg['Subject'] = send_info.subject
         msg['From'] = self.send_email_from
-        msg['To'] = send_info.ip
+        msg['To'] = send_info.address
 
         smtp = smtplib.SMTP()
         smtp.connect(self.send_mail_host)
         smtp.login(self.account, self.password)
-        smtp.sendmail(self.account, [send_info.ip], msg.as_string())
+        smtp.sendmail(self.account, [send_info.address], msg.as_string())
         smtp.quit()
 
 
@@ -47,14 +47,14 @@ class Mail(object):
 
         # print msg
         ls = msg["From"].split(' ')
-        ip = ls[1][1:-1]
+        address = ls[1][1:-1]
         subject = email.Header.decode_header(msg["Subject"])
         sub = self.my_unicode(subject[0][0], subject[0][1])
         # mailContent, suffix = self.parseEmail(msg)
 
         imapServer.close()
 
-        mail_info = Message(ip,sub.encode('utf-8'),msg['Date'],'')
+        mail_info = Message(address,sub.encode('utf-8'),msg['Date'],'')
         return mail_info
 
 
