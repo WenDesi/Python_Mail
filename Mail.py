@@ -12,13 +12,12 @@ from Message import *
 
 class Mail(object):
 
-    def __init__(self, mailhost, account, password, port = 993, ssl = 1):
+    def __init__(self, mailhost, account, password, port = 993):
         self.receive_mail_host = 'imap.' + mailhost
         self.send_mail_host = 'smtp.' + mailhost
         self.account = account
         self.password = password
         self.port = port
-        self.ssl = ssl
 
         self.send_email_from = 'J.A.R.V.I.S.<18188609675@126.com>'
 
@@ -39,36 +38,23 @@ class Mail(object):
 
 
     def get_mail(self):
-        #是否采用ssl
-        if self.ssl == 1:
-            imapServer = imaplib.IMAP4_SSL(self.receive_mail_host, self.port)
-        else:
-            print self.receive_mail_host
-            imapServer = imaplib.IMAP4(self.receive_mail_host, self.port)
+        imapServer = imaplib.IMAP4(self.receive_mail_host, self.port)
         imapServer.login(self.account, self.password)
 
         resp, items = imapServer.select('INBOX')
         resp, mailData = imapServer.fetch(items[0], "(RFC822)")
-        mailText = mailData[0][1]
-        msg = email.message_from_string(mailText)
+        msg = email.message_from_string(mailData[0][1])
 
         # print msg
         ls = msg["From"].split(' ')
-        strfrom = ''
-        if(len(ls) == 2):
-           fromname = email.Header.decode_header((ls[0]).strip('\"'))
-           strfrom = 'From : ' + self.my_unicode(fromname[0][0], fromname[0][1]) + ls[1]
-           print ls[1]
-        else:
-           strfrom = 'From : ' + msg["From"]
-        strdate = 'Date : ' + msg["Date"]
+        ip = ls[1][1:-1]
         subject = email.Header.decode_header(msg["Subject"])
         sub = self.my_unicode(subject[0][0], subject[0][1])
-        strsub = 'Subject : ' + sub
-
         # mailContent, suffix = self.parseEmail(msg)
 
-        mail_info = Message(ls[1],sub,msg['Date'],'')
+        imapServer.close()
+
+        mail_info = Message(ip,sub.encode('utf-8'),msg['Date'],'')
         return mail_info
 
 
@@ -79,15 +65,11 @@ class Mail(object):
         else:
             return unicode(s)
 
-    #解析IP地址
-    def anlysis_ip(self, ip):
-        pass
-
 
 
 
 if __name__ == '__main__':
-    wds = Mail('126.com', '18188609675@126.com', 'wds2006sdo', 143, 0)
+    wds = Mail('126.com', '18188609675@126.com', 'wds2006sdo', 143)
     print wds.get_mail()
 
     string = '<b>Some <i>HTML</i> text</b> and an image.<br><img src="cid:image1"><br>good!'
