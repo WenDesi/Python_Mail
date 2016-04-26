@@ -1,11 +1,7 @@
 #encoding=utf-8
 
-import socket
 import time
-import threading
 
-from Mail import *
-from Message import *
 from Ip import *
 
 
