@@ -8,7 +8,7 @@ from Ip import *
 event_list = {}
 last_mail_date = ''
 mail = Mail('126.com', '18188609675@126.com', 'wds2006sdo', 143)
-wait_second = 20
+wait_second = 120
 
 def event_ip(message):
     return_ip(message,mail)
